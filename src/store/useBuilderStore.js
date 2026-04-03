@@ -1,21 +1,129 @@
 import { create } from "zustand";
 
-export const useBuilderStore = create((set) => ({
-  components: [],
+const clone = (obj) => JSON.parse(JSON.stringify(obj));
+
+export const useBuilderStore = create((set, get) => ({
+  history: [],
+  future: [],
+
+  tree: {
+    id: "root",
+    type: "div",
+    props: { className: "p-4 min-h-screen" },
+    children: [],
+  },
+
   selectedId: null,
 
-  addComponent: (comp) =>
-    set((state) => ({
-      components: [...state.components, comp],
-    })),
+  // 🔥 SAVE HISTORY
+  saveHistory: () => {
+    const { history, tree } = get();
+    set({
+      history: [...history, clone(tree)],
+      future: [],
+    });
+  },
 
-  selectComponent: (id) =>
-    set({ selectedId: id }),
+  undo: () => {
+    const { history, tree, future } = get();
+    if (history.length === 0) return;
 
-  updateProps: (id, newProps) =>
-    set((state) => ({
-      components: state.components.map((c) =>
-        c.id === id ? { ...c, props: { ...c.props, ...newProps } } : c
-      ),
-    })),
+    const prev = history[history.length - 1];
+
+    set({
+      tree: prev,
+      history: history.slice(0, -1),
+      future: [clone(tree), ...future],
+    });
+  },
+
+  redo: () => {
+    const { future, history, tree } = get();
+    if (future.length === 0) return;
+
+    const next = future[0];
+
+    set({
+      tree: next,
+      future: future.slice(1),
+      history: [...history, clone(tree)],
+    });
+  },
+
+  selectComponent: (id) => set({ selectedId: id }),
+
+  // 🔥 ADD COMPONENT
+  addComponent: (parentId, component) => {
+    get().saveHistory();
+
+    const newTree = clone(get().tree);
+
+    function add(node) {
+      if (node.id === parentId) {
+        node.children.push(component);
+      } else {
+        node.children.forEach(add);
+      }
+    }
+
+    add(newTree);
+
+    set({ tree: newTree });
+  },
+
+  // 🔥 UPDATE PROPS
+  updateProps: (id, newProps) => {
+    get().saveHistory();
+
+    const newTree = clone(get().tree);
+
+    function update(node) {
+      if (node.id === id) {
+        node.props = { ...node.props, ...newProps };
+      } else {
+        node.children.forEach(update);
+      }
+    }
+
+    update(newTree);
+
+    set({ tree: newTree });
+  },
+
+  // 🔥 DELETE
+  deleteComponent: (id) => {
+    get().saveHistory();
+
+    function remove(node) {
+      node.children = node.children.filter((c) => c.id !== id);
+      node.children.forEach(remove);
+    }
+
+    const newTree = clone(get().tree);
+    remove(newTree);
+
+    set({ tree: newTree, selectedId: null });
+  },
+
+  // 🔥 DUPLICATE
+  duplicateComponent: (id) => {
+    get().saveHistory();
+
+    const newTree = clone(get().tree);
+
+    function duplicate(node) {
+      node.children.forEach((child, index) => {
+        if (child.id === id) {
+          const copy = clone(child);
+          copy.id = Date.now().toString();
+          node.children.splice(index + 1, 0, copy);
+        } else {
+          duplicate(child);
+        }
+      });
+    }
+
+    duplicate(newTree);
+    set({ tree: newTree });
+  },
 }));

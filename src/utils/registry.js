@@ -4,14 +4,21 @@ export const registry = [
     label: "Button",
     defaultProps: {
       text: "Click Me",
-      variant: "primary",
+      className: "bg-blue-500 text-white px-4 py-2",
     },
     propsSchema: {
       text: { type: "text" },
-      variant: {
-        type: "select",
-        options: ["primary", "secondary"],
-      },
+      className: { type: "text" },
+    },
+  },
+  {
+    type: "div",
+    label: "Container",
+    defaultProps: {
+      className: "p-4 border",
+    },
+    propsSchema: {
+      className: { type: "text" },
     },
   },
 ];

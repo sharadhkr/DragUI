@@ -11,10 +11,11 @@ export default function Sidebar() {
           key={comp.type}
           className="p-2 bg-gray-200 mb-2 cursor-pointer"
           onClick={() =>
-            addComponent({
-              id: Date.now(),
+            addComponent("root", {
+              id: Date.now().toString(),
               type: comp.type,
               props: comp.defaultProps,
+              children: [],
             })
           }
         >
