@@ -15,7 +15,7 @@ export default function Sidebar() {
             addComponent("root", {
               id: Date.now().toString(),
               type: comp.type,
-              props: comp.defaultProps,
+              props: { ...comp.defaultProps }, // ✅ IMPORTANT
               children: [],
             })
           }

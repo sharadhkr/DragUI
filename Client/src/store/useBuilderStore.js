@@ -52,24 +52,26 @@ export const useBuilderStore = create((set, get) => ({
 
   selectComponent: (id) => set({ selectedId: id }),
 
-  // 🔥 ADD COMPONENT
-  addComponent: (parentId, component) => {
-    get().saveHistory();
+ addComponent: (parentId, component) => {
+  const newTree = JSON.parse(JSON.stringify(get().tree));
 
-    const newTree = clone(get().tree);
-
-    function add(node) {
-      if (node.id === parentId) {
-        node.children.push(component);
-      } else {
-        node.children.forEach(add);
-      }
+  function add(node) {
+    if (node.id === parentId) {
+      node.children.push(component);
+      return true;
     }
 
-    add(newTree);
+    for (let child of node.children) {
+      if (add(child)) return true;
+    }
 
-    set({ tree: newTree });
-  },
+    return false;
+  }
+
+  add(newTree);
+
+  set({ tree: newTree });
+},
 
   // 🔥 UPDATE PROPS
   updateProps: (id, newProps) => {
