@@ -12,7 +12,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+import componentRoutes from "./routes/components.js";
 
+app.use("/api/component", componentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/project", projectRoutes);
 

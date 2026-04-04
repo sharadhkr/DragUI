@@ -1,7 +1,8 @@
-import { registry } from "../utils/registry";
+import { useRegistry } from "../hooks/useRegistry";
 import { useBuilderStore } from "../store/useBuilderStore";
 
 export default function Sidebar() {
+  const registry = useRegistry();
   const addComponent = useBuilderStore((s) => s.addComponent);
 
   return (
