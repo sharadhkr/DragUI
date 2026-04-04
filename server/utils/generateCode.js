@@ -32,7 +32,7 @@ ${children}
   const body = renderNode(tree);
 
   return `
-import { ${[...imports].join(", ")} } from "sharadui";
+import { ${[...imports].join(", ")} } from "DropUi";
 
 export default function GeneratedUI() {
   return (
