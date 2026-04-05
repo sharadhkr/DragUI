@@ -22,22 +22,33 @@ router.post("/signup", async (req, res) => {
 
   res.json({ message: "User created" });
 });
-
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  try {
+    const user = await User.findOne({ email });
 
-  const isMatch = await bcrypt.compare(password, user.password);
+    // 🔥 FIX 1 — user check
+    if (!user) {
+      return res.status(400).json("User not found");
+    }
 
-  if (!isMatch) return res.status(400).json("Invalid");
+    const isMatch = await bcrypt.compare(password, user.password);
 
-  const token = jwt.sign(
-    { userId: user._id },
-    process.env.JWT_SECRET
-  );
+    // 🔥 FIX 2 — password check
+    if (!isMatch) {
+      return res.status(400).json("Invalid password");
+    }
 
-  res.json({ token });
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET
+    );
+
+    res.json({ token });
+  } catch (err) {
+    res.status(500).json("Server error");
+  }
 });
 
 export default router;
