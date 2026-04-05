@@ -6,6 +6,13 @@ export default function GeneratedUI() {
     <>
       <div className="p-4 min-h-screen">
 <Button text="New Component" className="p-2 border" />
+
+
+
+
+
+
+<Button text="New Component" className="p-7 border" />
 </div>
     </>
   );
