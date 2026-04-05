@@ -1,46 +1,62 @@
 import { useState } from "react";
-import axios from "axios";
+import { registerAPI } from "../api/auth";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
-  const register = async () => {
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleRegister = async () => {
     try {
-      await axios.post("http://localhost:5000/api/auth/signup", {
-        email,
-        password,
-      });
+      await registerAPI(form);
 
-      alert("Registered successfully ✅");
+      alert("Account created ✅");
+      navigate("/login");
     } catch (err) {
       alert(err.response?.data || "Error");
     }
   };
 
   return (
-    <div className="p-10 space-y-4">
-      <h2 className="text-xl font-bold">Register</h2>
+    <div className="h-screen flex items-center justify-center bg-gray-100">
+      <div className="bg-white p-8 rounded shadow w-80 space-y-4">
+        <h2 className="text-xl font-bold text-center">Register</h2>
 
-      <input
-        placeholder="Email"
-        className="border p-2 w-full"
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <input
+          placeholder="Email"
+          className="border p-2 w-full"
+          onChange={(e) =>
+            setForm({ ...form, email: e.target.value })
+          }
+        />
 
-      <input
-        placeholder="Password"
-        type="password"
-        className="border p-2 w-full"
-        onChange={(e) => setPassword(e.target.value)}
-      />
+        <input
+          placeholder="Password"
+          type="password"
+          className="border p-2 w-full"
+          onChange={(e) =>
+            setForm({ ...form, password: e.target.value })
+          }
+        />
 
-      <button
-        onClick={register}
-        className="bg-green-500 text-white p-2 w-full"
-      >
-        Register
-      </button>
+        <button
+          onClick={handleRegister}
+          className="bg-green-500 text-white w-full p-2 rounded"
+        >
+          Register
+        </button>
+
+        <p
+          className="text-sm text-center cursor-pointer text-blue-500"
+          onClick={() => navigate("/login")}
+        >
+          Already have account?
+        </p>
+      </div>
     </div>
   );
 }

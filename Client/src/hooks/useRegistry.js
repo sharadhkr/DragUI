@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { getComponents } from "../api/component";
 
 export function useRegistry() {
   const [registry, setRegistry] = useState([]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/component/all")
-      .then((res) => setRegistry(res.data));
+    getComponents().then((res) =>
+      setRegistry(res.data)
+    );
   }, []);
 
   return registry;
