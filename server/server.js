@@ -5,11 +5,23 @@ import dotenv from "dotenv";
 
 import authRoutes from "./routes/authRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
+import session from "express-session";
+import passport from "./config/Passport.js";
 
 dotenv.config();
 
 const app = express();
 
+app.use(
+  session({
+    secret: "secret",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(cors());
 app.use(express.json());
 import componentRoutes from "./routes/components.js";

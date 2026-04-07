@@ -1,9 +1,15 @@
-import axios from "axios";
+import API from "./index";
 
-const API = "http://localhost:5000/api";
-
+// EMAIL LOGIN / REGISTER
 export const loginAPI = (data) =>
-  axios.post(`${API}/auth/login`, data);
+  API.post("/auth/login", data);
 
-export const registerAPI = (data) =>
-  axios.post(`${API}/auth/signup`, data);
+// GOOGLE LOGIN
+export const googleLogin = () => {
+  window.location.href = "http://localhost:5000/api/auth/google";
+};
+
+// GITHUB LOGIN
+export const githubLogin = () => {
+  window.location.href = "http://localhost:5000/api/auth/github";
+};
