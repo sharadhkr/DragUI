@@ -31,8 +31,8 @@ passport.use(
 passport.use(
   new GitHubStrategy(
     {
-      clientID: "GITHUB_CLIENT_ID",
-      clientSecret: "GITHUB_SECRET",
+      clientID: "Ov23liJXeRQzt8BNiBvW",
+      clientSecret: "9f41b8a05c86c4b27eaf9155cc3d7928570c2b33",
       callbackURL: "/api/auth/github/callback",
     },
     async (_, __, profile, done) => {

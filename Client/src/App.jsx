@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Builder from "./pages/Builder";
 import ProtectedRoute from "./middleware/ProtectedRoute";
+import AuthSuccess from "./pages/AuthSuccess";
+import Dashboard from "./pages/Dashboard";
 
 export default function App() {
   return (
@@ -10,8 +11,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-
+        <Route path="/auth-success" element={<AuthSuccess />} />
+        <Route path="/dashboard" element={<Dashboard/>} />
         <Route
           path="/builder"
           element={
