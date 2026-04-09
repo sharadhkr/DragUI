@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as GitHubStrategy } from "passport-github2";
@@ -8,8 +10,8 @@ import jwt from "jsonwebtoken";
 passport.use(
   new GoogleStrategy(
     {
-      clientID: "626280928724-vmdehg5m6dqhhdlcfivdmcp57s85brkp.apps.googleusercontent.com",
-      clientSecret: "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",
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: "http://localhost:5000/api/auth/google/callback",
     },
     async (_, __, profile, done) => {
@@ -31,8 +33,8 @@ passport.use(
 passport.use(
   new GitHubStrategy(
     {
-      clientID: "Ov23liJXeRQzt8BNiBvW",
-      clientSecret: "9f41b8a05c86c4b27eaf9155cc3d7928570c2b33",
+      clientID: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
       callbackURL: "/api/auth/github/callback",
     },
     async (_, __, profile, done) => {
