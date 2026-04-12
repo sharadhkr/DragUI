@@ -31,12 +31,12 @@ router.post("/login", async (req, res) => {
 
 
 // ================= GOOGLE =================
-router.get("/google", passport.authenticate("google", {
+router.get("/user/google", passport.authenticate("google", {
   scope: ["profile", "email"],
 }));
 
 router.get(
-  "/google/callback",
+  "/user/google/callback",
   passport.authenticate("google", { session: false }),
   (req, res) => {
     const token = jwt.sign(
@@ -48,6 +48,33 @@ router.get(
   }
 );
 
+router.get(
+  "/google",
+  (req, res, next) => {
+    const redirect = req.query.redirect;
+    req.session.redirect = redirect;
+    next();
+  },
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { session: false }),
+  (req, res) => {
+    const token = jwt.sign(
+      { userId: req.user._id },
+      process.env.JWT_SECRET
+    );
+
+    const redirect = req.query.redirect || req.session?.redirect;
+
+    if (redirect) {
+      return res.redirect(`${redirect}?token=${token}`);
+    }
+
+    res.redirect(`http://localhost:5173/auth-success?token=${token}`);
+  }
+);
 
 // ================= GITHUB =================
 router.get("/github", passport.authenticate("github", { scope: ["user:email"] }));
@@ -64,42 +91,5 @@ router.get(
     res.redirect(`http://localhost:5173/auth-success?token=${token}`);
   }
 );
-
-
-router.post("/cli-login", async (req, res) => {
-  const { username, password } = req.body;
-
-  const user = await User.findOne({ username });
-
-  if (!user) return res.status(404).json("User not found");
-
-  // 🟢 PUBLIC ACCOUNT
-  if (!user.isPrivate) {
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET
-    );
-
-    return res.json({ token });
-  }
-
-  // 🔴 PRIVATE ACCOUNT
-  if (!password) {
-    return res.status(400).json("Password required");
-  }
-
-  const isMatch = await bcrypt.compare(password, user.password);
-
-  if (!isMatch) {
-    return res.status(400).json("Invalid password");
-  }
-
-  const token = jwt.sign(
-    { userId: user._id },
-    process.env.JWT_SECRET
-  );
-
-  res.json({ token });
-});
 
 export default router;
