@@ -1,16 +1,12 @@
 import mongoose from "mongoose";
 
 const componentSchema = new mongoose.Schema({
-  type: String,
-  label: String,
-
-  defaultProps: Object,
-  propsSchema: Object,
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  name: String,
+  type: String, // frontend / backend
+  category: String,
+  path: String, // template path
+  props: [String],
+  files: [String],
 });
 
 export default mongoose.model("Component", componentSchema);

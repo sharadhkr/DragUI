@@ -6,7 +6,7 @@ export const loginAPI = (data) =>
 
 // GOOGLE LOGIN
 export const googleLogin = () => {
-  window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+  window.location.href = `${import.meta.env.VITE_API_URL}/auth/user/google`;
 };
 
 // GITHUB LOGIN
