@@ -1,5 +1,5 @@
 import express from "express";
-import Component from "../models/Component.js";
+import Component from "../models/components.js";
 import { upload } from "../middleware/upload.js";
 
 const router = express.Router();
