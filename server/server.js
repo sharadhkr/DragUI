@@ -33,7 +33,6 @@ app.use("/api/component", componentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/project", projectRoutes);
 
-app.use("/api/admin", adminRoutes);
 
 mongoose.connect(process.env.MONGO_URI).then(() => {
   console.log("✅ DB connected");
