@@ -1,18 +1,27 @@
 import express from "express";
-import Component from "../models/components.js";
+import Component from "../models/Component.js";
+import fs from "fs";
+import path from "path";
 
 const router = express.Router();
 
-// 🔥 ADD COMPONENT (ADMIN)
-router.post("/add", async (req, res) => {
-  const comp = await Component.create(req.body);
-  res.json(comp);
-});
+router.get("/:name", async (req, res) => {
+  const comp = await Component.findOne({ name: req.params.name });
 
-// 🔥 GET ALL COMPONENTS
-router.get("/all", async (req, res) => {
-  const comps = await Component.find();
-  res.json(comps);
+  if (!comp) return res.status(404).json("Not found");
+
+  const basePath = path.join("templates", comp.path);
+
+  const files = comp.files.map((file) => {
+    const content = fs.readFileSync(
+      path.join(basePath, file),
+      "utf-8"
+    );
+
+    return { name: file, content };
+  });
+
+  res.json({ files });
 });
 
 export default router;
