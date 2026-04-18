@@ -1,5 +1,5 @@
 import express from "express";
-import Component from "../models/Component.js";
+import Component from "../models/components.js";
 import fs from "fs";
 import path from "path";
 

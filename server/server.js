@@ -25,8 +25,10 @@ app.use(passport.session());
 app.use(cors());
 app.use(express.json());
 import adminRoutes from "./routes/admin.js";
+import adminAuthRoutes from "./routes/adminAuth.js";
 
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin-auth", adminAuthRoutes);
 import componentRoutes from "./routes/components.js";
 
 app.use("/api/component", componentRoutes);
