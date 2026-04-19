@@ -33,13 +33,70 @@ export default async function pull(...args) {
     const componentCode = generateComponent(data.design);
     fs.ensureDirSync("src");
     fs.writeFileSync("src/GeneratedUI.jsx", componentCode);
+
+    ensureDropUiPackage();
+    clearViteCache();
+
     console.log("✅ Generated UI component saved to src/GeneratedUI.jsx");
+    console.log("✅ Local DropUi package created in node_modules/DropUi");
+    console.log("✅ Vite cache cleared - ready to run npm run dev");
   } else if (type === "backend") {
     fs.ensureDirSync("routes");
     fs.writeFileSync("routes/generated.json", JSON.stringify(data.design, null, 2));
     console.log("✅ Design JSON saved to routes/generated.json");
   } else {
     console.log("❌ Unknown project type. Run this from a frontend or backend directory.");
+  }
+}
+
+function ensureDropUiPackage() {
+  const dropUiRoot = "node_modules/DropUi";
+  const indexPath = `${dropUiRoot}/index.js`;
+
+  // Always regenerate to ensure fresh files
+  fs.ensureDirSync(dropUiRoot);
+  fs.writeFileSync(
+    `${dropUiRoot}/package.json`,
+    JSON.stringify(
+      {
+        name: "DropUi",
+        version: "1.0.0",
+        type: "module",
+        main: "index.js",
+      },
+      null,
+      2
+    )
+  );
+
+  const indexContent = `import React from 'react';
+
+export function Button({ children, text, className = '', ...props }) {
+  return React.createElement('button', {
+    className: \`rounded-lg bg-cyan-500 px-4 py-2 text-white \${className}\`,
+    ...props
+  }, text || children);
+}
+
+export function Container({ children, className = '', ...props }) {
+  return React.createElement('div', {
+    className: \`rounded-3xl border border-slate-200 bg-white p-4 \${className}\`,
+    ...props
+  }, children);
+}
+`;
+
+  fs.writeFileSync(indexPath, indexContent);
+}
+
+function clearViteCache() {
+  try {
+    const viteCachePath = "node_modules/.vite";
+    if (fs.existsSync(viteCachePath)) {
+      fs.removeSync(viteCachePath);
+    }
+  } catch (err) {
+    // Silently ignore if cache doesn't exist or can't be cleared
   }
 }
 
@@ -73,10 +130,11 @@ const Renderer = ({ node }) => {
 
 const GeneratedUI = () => {
   const design = ${JSON.stringify(design)};
+  const nodes = Array.isArray(design) ? design : design?.children || [];
 
   return (
     <div className="generated-ui">
-      {design.map((node) => (
+      {nodes.map((node) => (
         <Renderer key={node.id} node={node} />
       ))}
     </div>
