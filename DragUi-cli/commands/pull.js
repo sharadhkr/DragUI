@@ -114,13 +114,47 @@ const componentRegistry = {
   container: Container,
 };
 
+const CSS_STYLE_KEYS = new Set([
+  'color',
+  'backgroundColor',
+  'fontSize',
+  'textAlign',
+  'fontWeight',
+  'padding',
+  'margin',
+  'width',
+  'height',
+  'display',
+  'border',
+  'borderRadius',
+  'boxShadow',
+]);
+
 const Renderer = ({ node }) => {
   if (!node) return null;
 
   const Comp = componentRegistry[node.type] || 'div';
 
+  // Separate CSS props from DOM props
+  const cssProps = {};
+  const domProps = {};
+  
+  Object.entries(node.props || {}).forEach(([key, value]) => {
+    if (CSS_STYLE_KEYS.has(key)) {
+      cssProps[key] = value;
+    } else {
+      domProps[key] = value;
+    }
+  });
+
+  const style = Object.keys(cssProps).length > 0 ? cssProps : undefined;
+
   return (
-    <Comp {...node.props} className={node.props?.className || ''}>
+    <Comp 
+      {...domProps} 
+      style={style}
+      className={node.props?.className || ''}
+    >
       {node.children?.map((child) => (
         <Renderer key={child.id} node={child} />
       ))}
