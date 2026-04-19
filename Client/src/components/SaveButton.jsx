@@ -1,10 +1,15 @@
-import axios from "axios";
+import { saveProject } from "../api/Project";
 import { useBuilderStore } from "../store/useBuilderStore";
 
-export default function SaveButton() {
+export default function SaveButton({ projectName }) {
   const tree = useBuilderStore((s) => s.tree);
 
   const save = async () => {
+    if (!projectName) {
+      alert("Please enter a project name before saving.");
+      return;
+    }
+
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -12,24 +17,27 @@ export default function SaveButton() {
       return;
     }
 
-    await axios.post(
-      "http://localhost:5000/api/project/save",
-      {
-        name: "my-project",
-        design: tree,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      await saveProject(
+        {
+          name: projectName,
+          design: tree,
         },
-      }
-    );
-
-    alert("Saved successfully");
+        token
+      );
+      alert("Saved successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Save failed. Check the server and try again.");
+    }
   };
 
   return (
-    <button onClick={save} className="bg-green-500 text-white p-2">
+    <button
+      type="button"
+      onClick={save}
+      className="rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600"
+    >
       Save
     </button>
   );

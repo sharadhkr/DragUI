@@ -1,19 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import ComponentBuilder from "./ComponentBuilder";
 import "./AdminDashboard.css";
 
 const AdminDashboard = ({ token, onLogout }) => {
   const [components, setComponents] = useState([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "",
-    category: "",
-    props: "",
-  });
-  const [files, setFiles] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [showBuilder, setShowBuilder] = useState(false);
 
   // Fetch components on mount
   useEffect(() => {
@@ -31,65 +23,6 @@ const AdminDashboard = ({ token, onLogout }) => {
       setComponents(response.data);
     } catch (err) {
       console.error("Error fetching components:", err);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    setFiles(Array.from(e.target.files));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
-
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("type", formData.type);
-      formDataToSend.append("category", formData.category);
-      formDataToSend.append("props", formData.props);
-
-      files.forEach((file) => {
-        formDataToSend.append("files", file);
-      });
-
-      const response = await axios.post(
-        "http://localhost:5000/api/admin/component",
-        formDataToSend,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      setSuccess("Component created successfully!");
-      setFormData({
-        name: "",
-        type: "",
-        category: "",
-        props: "",
-      });
-      setFiles([]);
-      fetchComponents();
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(""), 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || "Error creating component");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -118,130 +51,68 @@ const AdminDashboard = ({ token, onLogout }) => {
       </header>
 
       <div className="admin-content">
-        <div className="create-component-section">
-          <h2>Create New Component</h2>
-
-          {error && <div className="admin-error-message">{error}</div>}
-          {success && <div className="admin-success-message">{success}</div>}
-
-          <form onSubmit={handleSubmit} className="component-form">
-            <div className="form-row">
-              <div className="form-group">
-                <label>Component Name *</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="e.g., CustomButton"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Type *</label>
-                <input
-                  type="text"
-                  name="type"
-                  value={formData.type}
-                  onChange={handleInputChange}
-                  placeholder="e.g., button, card, form"
-                  required
-                />
-              </div>
+        {!showBuilder ? (
+          <>
+            <div className="mb-6">
+              <button
+                onClick={() => setShowBuilder(true)}
+                className="px-6 py-3 bg-cyan-500 text-white rounded-lg font-semibold hover:bg-cyan-600"
+              >
+                + Create New Component
+              </button>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>Category *</label>
-                <input
-                  type="text"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  placeholder="e.g., UI, Layout, Input"
-                  required
-                />
-              </div>
+            <div className="components-list-section">
+              <h2>Components Library ({components.length})</h2>
 
-              <div className="form-group">
-                <label>Props (comma-separated)</label>
-                <input
-                  type="text"
-                  name="props"
-                  value={formData.props}
-                  onChange={handleInputChange}
-                  placeholder="e.g., color,size,disabled"
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Upload Files</label>
-              <input
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                className="file-input"
-              />
-              {files.length > 0 && (
-                <div className="file-list">
-                  {files.map((file, idx) => (
-                    <span key={idx} className="file-tag">
-                      {file.name}
-                    </span>
+              {components.length === 0 ? (
+                <p className="no-components">No components created yet</p>
+              ) : (
+                <div className="components-grid">
+                  {components.map((component) => (
+                    <div key={component._id} className="component-card">
+                      <h3>{component.label || component.name}</h3>
+                      <p>
+                        <strong>Type:</strong> {component.type}
+                      </p>
+                      <p>
+                        <strong>Category:</strong> {component.category}
+                      </p>
+                      {component.props && component.props.length > 0 && (
+                        <p>
+                          <strong>Props:</strong> {component.props.length}
+                        </p>
+                      )}
+                      <button
+                        onClick={() => handleDelete(component._id)}
+                        className="delete-btn"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
-
+          </>
+        ) : (
+          <>
             <button
-              type="submit"
-              disabled={loading}
-              className="admin-submit-btn"
+              onClick={() => setShowBuilder(false)}
+              className="mb-6 px-6 py-3 bg-slate-500 text-white rounded-lg font-semibold hover:bg-slate-600"
             >
-              {loading ? "Creating..." : "Create Component"}
+              ← Back to Library
             </button>
-          </form>
-        </div>
 
-        <div className="components-list-section">
-          <h2>Components List ({components.length})</h2>
-
-          {components.length === 0 ? (
-            <p className="no-components">No components created yet</p>
-          ) : (
-            <div className="components-grid">
-              {components.map((component) => (
-                <div key={component._id} className="component-card">
-                  <h3>{component.name}</h3>
-                  <p>
-                    <strong>Type:</strong> {component.type}
-                  </p>
-                  <p>
-                    <strong>Category:</strong> {component.category}
-                  </p>
-                  {component.props && component.props.length > 0 && (
-                    <p>
-                      <strong>Props:</strong> {component.props.join(", ")}
-                    </p>
-                  )}
-                  {component.files && component.files.length > 0 && (
-                    <p>
-                      <strong>Files:</strong> {component.files.length}
-                    </p>
-                  )}
-                  <button
-                    onClick={() => handleDelete(component._id)}
-                    className="delete-btn"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+            <ComponentBuilder
+              token={token}
+              onSuccess={() => {
+                fetchComponents();
+                setShowBuilder(false);
+              }}
+            />
+          </>
+        )}
       </div>
     </div>
   );

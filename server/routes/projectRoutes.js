@@ -28,7 +28,7 @@ router.post("/save", auth, async (req, res) => {
   res.json(project);
 });
 
-// GET PROJECT
+// GET CURRENT USER'S PROJECT
 router.get("/get", auth, async (req, res) => {
   const project = await Project.findOne({
     userId: req.userId,
@@ -36,6 +36,7 @@ router.get("/get", auth, async (req, res) => {
 
   res.json(project);
 });
+
 // GET GENERATED CODE
 router.get("/code", auth, async (req, res) => {
   const project = await Project.findOne({
@@ -48,4 +49,31 @@ router.get("/code", auth, async (req, res) => {
 
   res.json({ code });
 });
+
+// GET PROJECT BY ID OR NAME
+router.get("/:idOrName", auth, async (req, res) => {
+  const { idOrName } = req.params;
+  let project;
+
+  // Try to find by MongoDB ObjectId first
+  if (idOrName.match(/^[0-9a-fA-F]{24}$/)) {
+    project = await Project.findOne({
+      _id: idOrName,
+      userId: req.userId,
+    });
+  }
+
+  // If not found by ID, try by name
+  if (!project) {
+    project = await Project.findOne({
+      name: idOrName,
+      userId: req.userId,
+    });
+  }
+
+  if (!project) return res.status(404).json({ error: "Project not found" });
+
+  res.json(project);
+});
+
 export default router;

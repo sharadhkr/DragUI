@@ -92,6 +92,11 @@ export const useBuilderStore = create((set, get) => ({
     set({ tree: newTree });
   },
 
+  // 🔥 UPDATE SINGLE PROP (NEW)
+  updateComponentProp: (id, key, value) => {
+    get().updateProps(id, { [key]: value });
+  },
+
   // 🔥 DELETE
   deleteComponent: (id) => {
     get().saveHistory();

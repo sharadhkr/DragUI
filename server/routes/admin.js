@@ -5,7 +5,41 @@ import adminAuth from "../middleware/adminAuth.js";
 
 const router = express.Router();
 
-// 🔥 Upload Component (Protected)
+// 🔥 Create Component with Code (New Format - Protected)
+router.post(
+  "/components/create",
+  adminAuth,
+  async (req, res) => {
+    try {
+      const { name, label, category, description, code, installSteps, props } = req.body;
+
+      if (!name || !category) {
+        return res.status(400).json({ message: "Name and category are required" });
+      }
+
+      const component = await Component.create({
+        name,
+        label: label || name,
+        category,
+        description: description || "",
+        code: code || "",
+        installSteps: installSteps || "",
+        props: props || [],
+        path: `${category}/${name}`,
+      });
+
+      res.status(201).json({
+        message: "Component created successfully",
+        component,
+      });
+    } catch (err) {
+      console.error("Component creation error:", err);
+      res.status(500).json({ message: err.message });
+    }
+  }
+);
+
+// 🔥 Upload Component (Protected) - Legacy format
 router.post(
   "/component",
   adminAuth,
@@ -25,7 +59,7 @@ router.post(
         type,
         category,
         path: `${type}/${name}`,
-        props: props ? props.split(",") : [],
+        props: props ? props.split(",").map(p => ({ name: p.trim() })) : [],
         files,
       });
 
