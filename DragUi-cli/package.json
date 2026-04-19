@@ -2,7 +2,8 @@
   "name": "dropui-cli",
   "version": "1.0.0",
   "bin": {
-    "dropui": "./bin/index.js"
+    "dropui": "./bin/index.js",
+    "dropui-cli": "./bin/index.js"
   },
   "type": "module",
   "dependencies": {

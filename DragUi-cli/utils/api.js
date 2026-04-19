@@ -15,5 +15,15 @@ export async function apiRequest(endpoint, options = {}) {
     },
   });
 
+  if (!res.ok) {
+    const contentType = res.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const error = await res.json();
+      throw new Error(error.error || error.message || `HTTP ${res.status}`);
+    } else {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+  }
+
   return res.json();
 }
