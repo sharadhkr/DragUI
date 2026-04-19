@@ -5,6 +5,11 @@ import path from "path";
 
 const router = express.Router();
 
+router.get("/all", async (req, res) => {
+  const components = await Component.find();
+  res.json(components);
+});
+
 router.get("/:name", async (req, res) => {
   const comp = await Component.findOne({ name: req.params.name });
 

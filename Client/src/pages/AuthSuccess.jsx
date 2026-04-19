@@ -1,9 +1,10 @@
 import { useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../context/authContext";
 
 export default function AuthSuccess() {
-  const { login } = useContext(AuthContext);
+  const auth = useContext(AuthContext) || {};
+  const { login } = auth;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -12,7 +13,7 @@ export default function AuthSuccess() {
     const token = query.get("token");
 
     if (token) {
-      login(token); // 🔥 THIS SAVES TOKEN
+      login?.(token); // 🔥 THIS SAVES TOKEN
       navigate("/dashboard");
     } else {
       navigate("/login");
