@@ -10,27 +10,73 @@ const AdminLogin = ({ onLoginSuccess }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState("");
 
+  const validateInputs = () => {
+    if (!adminId.trim()) {
+      setError("Admin ID is required");
+      return false;
+    }
+    if (!password.trim()) {
+      setError("Password is required");
+      return false;
+    }
+    if (isRegistering && password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateInputs()) {
+      return;
+    }
+
     setError("");
     setLoading(true);
 
     try {
       const endpoint = isRegistering ? "/api/admin-auth/register" : "/api/admin-auth/login";
-      const data = isRegistering
-        ? { adminId, password, email }
-        : { adminId, password };
+      const payload = isRegistering
+        ? { adminId: adminId.trim(), password, email: email.trim() || null }
+        : { adminId: adminId.trim(), password };
 
-      const response = await axios.post(`http://localhost:5000${endpoint}`, data);
+      console.log(`Attempting ${isRegistering ? "registration" : "login"}...`);
 
-      localStorage.setItem("adminToken", response.data.token);
-      localStorage.setItem("adminId", response.data.admin.adminId);
-      onLoginSuccess(response.data.token);
+      const response = await axios.post(`http://localhost:5000${endpoint}`, payload);
+
+      console.log("Success:", response.data);
+
+      if (response.data.token && response.data.admin) {
+        localStorage.setItem("adminToken", response.data.token);
+        localStorage.setItem("adminId", response.data.admin._id || response.data.admin.adminId);
+        localStorage.setItem("adminName", response.data.admin.adminId);
+
+        // Small delay to ensure state updates
+        setTimeout(() => {
+          onLoginSuccess(response.data.token);
+        }, 100);
+      } else {
+        setError("Invalid response from server");
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "An error occurred");
+      console.error("Auth error:", err);
+      const errorMessage = err.response?.data?.message
+        || err.message
+        || "An error occurred during authentication";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleAuthMode = () => {
+    setIsRegistering(!isRegistering);
+    setError("");
+    setAdminId("");
+    setPassword("");
+    setEmail("");
   };
 
   return (
@@ -42,13 +88,13 @@ const AdminLogin = ({ onLoginSuccess }) => {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Admin ID</label>
+            <label>Admin ID *</label>
             <input
               type="text"
               value={adminId}
               onChange={(e) => setAdminId(e.target.value)}
               placeholder="Enter admin ID"
-              required
+              disabled={loading}
             />
           </div>
 
@@ -59,28 +105,41 @@ const AdminLogin = ({ onLoginSuccess }) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email"
+                placeholder="Enter email (optional)"
+                disabled={loading}
               />
             </div>
           )}
 
           <div className="form-group">
-            <label>Password</label>
+            <label>Password *</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-              required
+              placeholder={isRegistering ? "Min 6 characters" : "Enter password"}
+              disabled={loading}
             />
+            {isRegistering && password && password.length < 6 && (
+              <small className="password-hint">Password must be at least 6 characters</small>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !adminId.trim() || !password.trim()}
             className="admin-login-btn"
           >
-            {loading ? "Loading..." : isRegistering ? "Register" : "Login"}
+            {loading ? (
+              <>
+                <span className="spinner"></span>
+                {isRegistering ? "Registering..." : "Logging in..."}
+              </>
+            ) : isRegistering ? (
+              "Register"
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
 
@@ -89,10 +148,8 @@ const AdminLogin = ({ onLoginSuccess }) => {
             {isRegistering ? "Already have an account?" : "Don't have an account?"}
             <button
               type="button"
-              onClick={() => {
-                setIsRegistering(!isRegistering);
-                setError("");
-              }}
+              onClick={toggleAuthMode}
+              disabled={loading}
               className="admin-toggle-btn"
             >
               {isRegistering ? "Login" : "Register"}

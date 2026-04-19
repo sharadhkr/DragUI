@@ -7,7 +7,12 @@ export const saveProject = (data, token) =>
     headers: { Authorization: `Bearer ${token}` },
   });
 
-export const getProject = (token) =>
-  axios.get(`${API}/project/get`, {
+export const getProjects = (token) =>
+  axios.get(`${API}/project/list`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+export const getProjectById = (projectId, token) =>
+  axios.get(`${API}/project/${projectId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });

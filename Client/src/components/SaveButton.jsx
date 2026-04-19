@@ -1,10 +1,15 @@
-import axios from "axios";
+import { saveProject } from "../api/Project";
 import { useBuilderStore } from "../store/useBuilderStore";
 
-export default function SaveButton() {
+export default function SaveButton({ projectName, onSaved }) {
   const tree = useBuilderStore((s) => s.tree);
 
   const save = async () => {
+    if (!projectName) {
+      alert("Please enter a project name before saving.");
+      return;
+    }
+
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -12,20 +17,24 @@ export default function SaveButton() {
       return;
     }
 
-    await axios.post(
-      "http://localhost:5000/api/project/save",
-      {
-        name: "my-project",
-        design: tree,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      const res = await saveProject(
+        {
+          name: projectName,
+          design: tree,
         },
-      }
-    );
+        token
+      );
 
-    alert("Saved successfully");
+      if (res?.data?._id) {
+        onSaved?.(res.data._id);
+      }
+
+      alert("Saved successfully");
+    } catch (error) {
+      console.error(error);
+      alert("Save failed. Please try again.");
+    }
   };
 
   return (

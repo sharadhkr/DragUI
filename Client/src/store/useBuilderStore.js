@@ -128,4 +128,7 @@ export const useBuilderStore = create((set, get) => ({
     duplicate(newTree);
     set({ tree: newTree });
   },
+
+  setTree: (tree) =>
+    set({ tree, selectedId: null, history: [], future: [] }),
 }));

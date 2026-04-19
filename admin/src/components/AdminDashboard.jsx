@@ -12,15 +12,20 @@ const AdminDashboard = ({ token, onLogout }) => {
   });
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchingComponents, setFetchingComponents] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [adminName, setAdminName] = useState("");
 
   // Fetch components on mount
   useEffect(() => {
+    const name = localStorage.getItem("adminName");
+    if (name) setAdminName(name);
     fetchComponents();
   }, [token]);
 
   const fetchComponents = async () => {
+    setFetchingComponents(true);
     try {
       const response = await axios.get(
         "http://localhost:5000/api/admin/components",
@@ -28,9 +33,13 @@ const AdminDashboard = ({ token, onLogout }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setComponents(response.data);
+      setComponents(Array.isArray(response.data) ? response.data : []);
     } catch (err) {
       console.error("Error fetching components:", err);
+      setError("Failed to fetch components");
+      setTimeout(() => setError(""), 3000);
+    } finally {
+      setFetchingComponents(false);
     }
   };
 
@@ -40,28 +49,52 @@ const AdminDashboard = ({ token, onLogout }) => {
       ...prev,
       [name]: value,
     }));
+    setError("");
   };
 
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
   };
 
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      setError("Component name is required");
+      return false;
+    }
+    if (!formData.type.trim()) {
+      setError("Component type is required");
+      return false;
+    }
+    if (!formData.category.trim()) {
+      setError("Category is required");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setError("");
     setSuccess("");
     setLoading(true);
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("type", formData.type);
-      formDataToSend.append("category", formData.category);
-      formDataToSend.append("props", formData.props);
+      formDataToSend.append("name", formData.name.trim());
+      formDataToSend.append("type", formData.type.trim());
+      formDataToSend.append("category", formData.category.trim());
+      formDataToSend.append("props", formData.props.trim());
 
       files.forEach((file) => {
         formDataToSend.append("files", file);
       });
+
+      console.log("Creating component...");
 
       const response = await axios.post(
         "http://localhost:5000/api/admin/component",
@@ -74,6 +107,8 @@ const AdminDashboard = ({ token, onLogout }) => {
         }
       );
 
+      console.log("Component created:", response.data);
+
       setSuccess("Component created successfully!");
       setFormData({
         name: "",
@@ -82,12 +117,16 @@ const AdminDashboard = ({ token, onLogout }) => {
         props: "",
       });
       setFiles([]);
-      fetchComponents();
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(""), 3000);
+      // Refresh components list
+      setTimeout(() => {
+        fetchComponents();
+        setSuccess("");
+      }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || "Error creating component");
+      console.error("Error creating component:", err);
+      const errorMsg = err.response?.data?.message || err.message || "Error creating component";
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -101,18 +140,33 @@ const AdminDashboard = ({ token, onLogout }) => {
         });
         setSuccess("Component deleted successfully!");
         fetchComponents();
-        setTimeout(() => setSuccess(""), 3000);
+        setTimeout(() => setSuccess(""), 2000);
       } catch (err) {
-        setError(err.response?.data?.message || "Error deleting component");
+        console.error("Error deleting component:", err);
+        const errorMsg = err.response?.data?.message || "Error deleting component";
+        setError(errorMsg);
+        setTimeout(() => setError(""), 3000);
       }
+    }
+  };
+
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to logout?")) {
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("adminId");
+      localStorage.removeItem("adminName");
+      onLogout();
     }
   };
 
   return (
     <div className="admin-dashboard">
       <header className="admin-header">
-        <h1>Admin Dashboard</h1>
-        <button onClick={onLogout} className="logout-btn">
+        <div className="header-left">
+          <h1>Admin Dashboard</h1>
+          {adminName && <p className="admin-welcome">Welcome, {adminName}!</p>}
+        </div>
+        <button onClick={handleLogout} className="logout-btn">
           Logout
         </button>
       </header>
@@ -134,7 +188,7 @@ const AdminDashboard = ({ token, onLogout }) => {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="e.g., CustomButton"
-                  required
+                  disabled={loading}
                 />
               </div>
 
@@ -146,7 +200,7 @@ const AdminDashboard = ({ token, onLogout }) => {
                   value={formData.type}
                   onChange={handleInputChange}
                   placeholder="e.g., button, card, form"
-                  required
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -160,7 +214,7 @@ const AdminDashboard = ({ token, onLogout }) => {
                   value={formData.category}
                   onChange={handleInputChange}
                   placeholder="e.g., UI, Layout, Input"
-                  required
+                  disabled={loading}
                 />
               </div>
 
@@ -172,17 +226,19 @@ const AdminDashboard = ({ token, onLogout }) => {
                   value={formData.props}
                   onChange={handleInputChange}
                   placeholder="e.g., color,size,disabled"
+                  disabled={loading}
                 />
               </div>
             </div>
 
             <div className="form-group">
-              <label>Upload Files</label>
+              <label>Upload Files (Optional)</label>
               <input
                 type="file"
                 multiple
                 onChange={handleFileChange}
                 className="file-input"
+                disabled={loading}
               />
               {files.length > 0 && (
                 <div className="file-list">
@@ -197,10 +253,17 @@ const AdminDashboard = ({ token, onLogout }) => {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !formData.name.trim() || !formData.type.trim() || !formData.category.trim()}
               className="admin-submit-btn"
             >
-              {loading ? "Creating..." : "Create Component"}
+              {loading ? (
+                <>
+                  <span className="spinner-small"></span>
+                  Creating...
+                </>
+              ) : (
+                "Create Component"
+              )}
             </button>
           </form>
         </div>
@@ -208,29 +271,33 @@ const AdminDashboard = ({ token, onLogout }) => {
         <div className="components-list-section">
           <h2>Components List ({components.length})</h2>
 
-          {components.length === 0 ? (
+          {fetchingComponents ? (
+            <p className="loading-text">Loading components...</p>
+          ) : components.length === 0 ? (
             <p className="no-components">No components created yet</p>
           ) : (
             <div className="components-grid">
               {components.map((component) => (
                 <div key={component._id} className="component-card">
                   <h3>{component.name}</h3>
-                  <p>
-                    <strong>Type:</strong> {component.type}
-                  </p>
-                  <p>
-                    <strong>Category:</strong> {component.category}
-                  </p>
-                  {component.props && component.props.length > 0 && (
+                  <div className="component-details">
                     <p>
-                      <strong>Props:</strong> {component.props.join(", ")}
+                      <strong>Type:</strong> {component.type}
                     </p>
-                  )}
-                  {component.files && component.files.length > 0 && (
                     <p>
-                      <strong>Files:</strong> {component.files.length}
+                      <strong>Category:</strong> {component.category}
                     </p>
-                  )}
+                    {component.props && component.props.length > 0 && (
+                      <p>
+                        <strong>Props:</strong> {component.props.join(", ")}
+                      </p>
+                    )}
+                    {component.files && component.files.length > 0 && (
+                      <p>
+                        <strong>Files:</strong> {component.files.length}
+                      </p>
+                    )}
+                  </div>
                   <button
                     onClick={() => handleDelete(component._id)}
                     className="delete-btn"

@@ -14,28 +14,39 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Admin ID and password required" });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
     const existingAdmin = await Admin.findOne({ adminId });
     if (existingAdmin) {
       return res.status(400).json({ message: "Admin ID already exists" });
     }
 
-    const admin = await Admin.create({
+    const admin = new Admin({
       adminId,
       password,
-      email,
+      email: email || null,
     });
 
-    const token = jwt.sign({ adminId: admin._id }, process.env.JWT_SECRET, {
+    await admin.save();
+
+    const token = jwt.sign({ adminId: admin._id }, process.env.JWT_SECRET || "secret-key", {
       expiresIn: "7d",
     });
 
     res.status(201).json({
       message: "Admin registered successfully",
       token,
-      admin: { adminId: admin.adminId, email: admin.email },
+      admin: {
+        _id: admin._id,
+        adminId: admin.adminId,
+        email: admin.email
+      },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Register error:", err);
+    res.status(500).json({ message: err.message || "Registration failed" });
   }
 });
 
@@ -58,17 +69,22 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid admin ID or password" });
     }
 
-    const token = jwt.sign({ adminId: admin._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ adminId: admin._id }, process.env.JWT_SECRET || "secret-key", {
       expiresIn: "7d",
     });
 
     res.json({
       message: "Login successful",
       token,
-      admin: { adminId: admin.adminId, email: admin.email },
+      admin: {
+        _id: admin._id,
+        adminId: admin.adminId,
+        email: admin.email
+      },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({ message: err.message || "Login failed" });
   }
 });
 
@@ -76,9 +92,13 @@ router.post("/login", async (req, res) => {
 router.get("/profile", adminAuth, async (req, res) => {
   try {
     const admin = await Admin.findById(req.adminId).select("-password");
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
     res.json(admin);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Profile error:", err);
+    res.status(500).json({ message: err.message || "Failed to fetch profile" });
   }
 });
 

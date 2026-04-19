@@ -21,30 +21,28 @@ export default function PropertiesPanel() {
 
   if (!selected) return <div className="w-1/4 p-4">No selection</div>;
 
-  return (
-    <div className="w-1/4 p-4 border-l space-y-3">
-      <h3 className="font-bold">{selected.type}</h3>
+  const editableProps = Object.entries(selected.props || {}).filter(
+    ([, value]) => typeof value === "string"
+  );
 
-      {/* TEXT */}
-      {"text" in selected.props && (
-        <input
-          value={selected.props.text}
-          onChange={(e) =>
-            updateProps(selected.id, { text: e.target.value })
-          }
-          className="border p-2 w-full"
-        />
+  return (
+    <div className="w-1/4 p-4 border-l space-y-4 bg-white min-h-screen">
+      <h3 className="font-bold text-lg">{selected.type}</h3>
+
+      {editableProps.length === 0 && (
+        <div className="text-sm text-slate-500">No editable properties</div>
       )}
 
-      {/* CLASS */}
-      <input
-        value={selected.props.className || ""}
-        onChange={(e) =>
-          updateProps(selected.id, { className: e.target.value })
-        }
-        className="border p-2 w-full"
-        placeholder="Tailwind classes"
-      />
+      {editableProps.map(([key, value]) => (
+        <label key={key} className="block text-sm space-y-1">
+          <span className="font-semibold">{key}</span>
+          <input
+            value={value}
+            onChange={(e) => updateProps(selected.id, { [key]: e.target.value })}
+            className="border p-2 w-full rounded"
+          />
+        </label>
+      ))}
 
       <button
         onClick={() => duplicateComponent(selected.id)}

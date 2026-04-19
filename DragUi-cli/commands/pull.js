@@ -22,13 +22,14 @@ export default async function pull(projectId) {
   console.log(`📦 Project type: ${data.type}`);
   console.log(`📁 Current dir: ${type}`);
 
-  // 🔥 BASIC DEMO (you will expand later)
   if (data.type === "frontend" && type === "frontend") {
-    fs.writeFileSync("src/GeneratedUI.jsx", "// UI CODE");
-    console.log("✅ Frontend installed");
+    fs.ensureDirSync("src");
+    fs.writeFileSync("src/GeneratedUI.jsx", data.code || "// UI CODE");
+    console.log("✅ Generated UI saved to src/GeneratedUI.jsx");
   } else if (data.type === "backend" && type === "backend") {
-    fs.writeFileSync("routes/generated.js", "// API CODE");
-    console.log("✅ Backend installed");
+    fs.ensureDirSync("routes");
+    fs.writeFileSync("routes/generated.js", data.code || "// API CODE");
+    console.log("✅ Generated backend file saved to routes/generated.js");
   } else {
     console.log("❌ Wrong directory for this project type");
   }
