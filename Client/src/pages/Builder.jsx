@@ -23,12 +23,14 @@ export default function Builder() {
     setActiveDrag(null);
 
     if (!over) return;
-    if (over.id !== "canvas") return;
 
     const payload = active.data.current;
     if (!payload || !payload.type) return;
 
-    addComponent("root", {
+    // Allow drops to canvas or any container
+    const parentId = over.id === "canvas" ? "root" : over.id;
+
+    addComponent(parentId, {
       id: Date.now().toString(),
       type: payload.type,
       props: { ...payload.props },

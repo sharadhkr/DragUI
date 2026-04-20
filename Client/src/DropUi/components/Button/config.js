@@ -4,7 +4,11 @@ export const ButtonConfig = {
 
   defaultProps: {
     text: "Click Me",
-    className: "bg-blue-500 text-white px-4 py-2",
+    className: "bg-blue-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600 transition",
+    backgroundColor: "#3b82f6",
+    color: "#ffffff",
+    padding: "8px 16px",
+    borderRadius: "8px",
   },
 
   propsSchema: {
@@ -15,6 +19,22 @@ export const ButtonConfig = {
     className: {
       type: "text",
       label: "Tailwind Classes",
+    },
+    backgroundColor: {
+      type: "color",
+      label: "Background Color",
+    },
+    color: {
+      type: "color",
+      label: "Text Color",
+    },
+    padding: {
+      type: "text",
+      label: "Padding (CSS)",
+    },
+    borderRadius: {
+      type: "text",
+      label: "Border Radius (CSS)",
     },
   },
 };

@@ -1,8 +1,10 @@
 import { useBuilderStore } from "../store/useBuilderStore";
 import { components } from "../DropUi/index";
+import { useDroppable } from "@dnd-kit/core";
 
 export default function Renderer({ node }) {
   const { selectedId, selectComponent } = useBuilderStore();
+  const { setNodeRef, isOver } = useDroppable({ id: node.id });
 
   const Comp = components[node.type] || "div";
 
@@ -26,6 +28,7 @@ export default function Renderer({ node }) {
     "border",
     "borderRadius",
     "boxShadow",
+    "minHeight",
   ];
 
   // Extract CSS props from node.props
@@ -43,6 +46,7 @@ export default function Renderer({ node }) {
     border: node.props?.border,
     borderRadius: node.props?.borderRadius,
     boxShadow: node.props?.boxShadow,
+    minHeight: node.props?.minHeight,
   };
 
   // Filter out undefined values
@@ -53,6 +57,7 @@ export default function Renderer({ node }) {
   const style = {
     ...cleanCssProps,
     outline: selectedId === node.id ? "2px solid #06b6d4" : "none",
+    backgroundColor: isOver && node.type === "Container" ? "#e0f2fe" : cleanCssProps.backgroundColor,
   };
 
   // Filter out CSS props from regular props to avoid DOM attribute warnings
@@ -62,12 +67,13 @@ export default function Renderer({ node }) {
 
   return (
     <Comp
+      ref={setNodeRef}
       {...domProps}
       onClick={handleClick}
       style={style}
       className={`${node.props?.className || ""} ${
         selectedId === node.id ? "outline-2" : ""
-      }`}
+      } ${isOver && node.type === "Container" ? "outline-2 outline-cyan-400" : ""}`}
     >
       {node.children?.map((child) => (
         <Renderer key={child.id} node={child} />
