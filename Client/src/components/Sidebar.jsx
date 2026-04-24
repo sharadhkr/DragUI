@@ -2,20 +2,28 @@ import { useDraggable } from "@dnd-kit/core";
 import { useRegistry } from "../hooks/useRegistry";
 import { useBuilderStore } from "../store/useBuilderStore";
 
-function ToolItem({ comp }) {
+function ToolItem({ comp, index }) {
+  if (!comp || !comp.type) {
+    console.warn("⚠️ Invalid component:", comp);
+    return null;
+  }
+  
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: `tool-${comp.type}`,
+    id: `tool-${comp.type}-${index}`,
     data: {
       type: comp.type,
       props: comp.defaultProps,
     },
   });
+  
+  console.log("🎯 ToolItem created:", { type: comp.type, id: `tool-${comp.type}-${index}`, hasListeners: !!listeners });
 
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      onMouseDown={(e) => console.log("🖱️ Mousedown on ToolItem:", comp.type)}
       style={{
         transform: transform
           ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
@@ -33,6 +41,10 @@ function ToolItem({ comp }) {
 export default function Sidebar() {
   const registry = useRegistry();
   const addComponent = useBuilderStore((s) => s.addComponent);
+  
+  // Filter out invalid entries
+  const validRegistry = registry.filter((comp) => comp && comp.type);
+  console.log("📦 Sidebar registry:", { total: registry.length, valid: validRegistry.length, items: validRegistry });
 
   return (
     <aside className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -44,9 +56,9 @@ export default function Sidebar() {
       </div>
 
       <div className="space-y-4">
-        {registry.map((comp) => (
-          <div key={comp.type}>
-            <ToolItem comp={comp} />
+        {validRegistry.map((comp, index) => (
+          <div key={`${comp.type}-${index}`}>
+            <ToolItem comp={comp} index={index} />
             <button
               type="button"
               onClick={() =>

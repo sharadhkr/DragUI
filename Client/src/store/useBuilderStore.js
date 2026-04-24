@@ -53,10 +53,13 @@ export const useBuilderStore = create((set, get) => ({
   selectComponent: (id) => set({ selectedId: id }),
 
  addComponent: (parentId, component) => {
+  console.log("🔥 addComponent called:", { parentId, component });
+  
   const newTree = JSON.parse(JSON.stringify(get().tree));
 
   function add(node) {
     if (node.id === parentId) {
+      console.log("✅ Found parent node, adding component");
       node.children.push(component);
       return true;
     }
@@ -68,7 +71,8 @@ export const useBuilderStore = create((set, get) => ({
     return false;
   }
 
-  add(newTree);
+  const success = add(newTree);
+  console.log("🔥 addComponent result:", { success, treeAfter: newTree });
 
   set({ tree: newTree });
 },

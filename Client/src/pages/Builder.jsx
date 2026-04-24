@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DndContext, DragOverlay } from "@dnd-kit/core";
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Canvas from "../components/Canvas";
@@ -14,21 +14,40 @@ export default function Builder() {
   const tree = useBuilderStore((s) => s.tree);
   const [projectName, setProjectName] = useState("My Project");
   const [activeDrag, setActiveDrag] = useState(null);
+  
+  // Configure sensors for drag detection
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      distance: 8,
+    })
+  );
 
   const handleDragStart = ({ active }) => {
+    console.log("🚀 handleDragStart:", active);
     setActiveDrag(active.data.current);
   };
 
   const handleDragEnd = ({ active, over }) => {
     setActiveDrag(null);
 
-    if (!over) return;
+    console.log("🔥 handleDragEnd called:", { active, over });
+
+    if (!over) {
+      console.log("❌ No over detected");
+      return;
+    }
 
     const payload = active.data.current;
-    if (!payload || !payload.type) return;
+    console.log("🔥 Payload:", payload);
+    
+    if (!payload || !payload.type) {
+      console.log("❌ Invalid payload");
+      return;
+    }
 
     // Allow drops to canvas or any container
     const parentId = over.id === "canvas" ? "root" : over.id;
+    console.log("🔥 Adding component to parent:", parentId);
 
     addComponent(parentId, {
       id: Date.now().toString(),
@@ -80,6 +99,7 @@ export default function Builder() {
         </div>
 
         <DndContext
+          sensors={sensors}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}

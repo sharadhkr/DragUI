@@ -7,6 +7,8 @@ export default function Renderer({ node }) {
   const { setNodeRef, isOver } = useDroppable({ id: node.id });
 
   const Comp = components[node.type] || "div";
+  
+  console.log("🎨 Rendering node:", { type: node.type, id: node.id, Comp: Comp?.name || "div" });
 
   const handleClick = (e) => {
     e.stopPropagation();
@@ -58,11 +60,13 @@ export default function Renderer({ node }) {
     ...cleanCssProps,
     outline: selectedId === node.id ? "2px solid #06b6d4" : "none",
     backgroundColor: isOver && node.type === "Container" ? "#e0f2fe" : cleanCssProps.backgroundColor,
+    cursor: "pointer",
+    userSelect: "none",
   };
 
   // Filter out CSS props from regular props to avoid DOM attribute warnings
   const domProps = Object.fromEntries(
-    Object.entries(node.props || {}).filter(([key]) => !CSS_STYLE_KEYS.includes(key))
+    Object.entries(node.props || {}).filter(([key]) => !CSS_STYLE_KEYS.includes(key) && key !== "children")
   );
 
   return (
@@ -70,6 +74,7 @@ export default function Renderer({ node }) {
       ref={setNodeRef}
       {...domProps}
       onClick={handleClick}
+      onMouseDown={(e) => e.stopPropagation()}
       style={style}
       className={`${node.props?.className || ""} ${
         selectedId === node.id ? "outline-2" : ""
